@@ -1,4 +1,5 @@
 const http = require('http');
+const { resolve } = require('path');
 
 class framework{
 
@@ -19,8 +20,42 @@ class framework{
         this.routes.push({method : "POST",path,callbackFn})
     };
 
-    listen(req,res){
-        
+    async executeMiddleware (req,res){
+        for (let mF of this.middleWare){
+            await new Promise((resolve) => {
+                mF(req ,res ,() =>{
+                    resolve()
+                })
+            })
+        };
+    };
+
+
+
+
+
+
+    listen(port ,callbackFn){
+        const server = http.createServer(async (req ,res) => {
+            console.log(req.url)
+        try{
+            await this.executeMiddleware(req,res);
+            const isMatch = this.routes.find((route) => route.method == req.method && route.path == req.url);
+            if(isMatch){
+                isMatch.callbackFn(req,res)
+            }else{
+                res.writeHead(401);
+                res.end("routes do not match")
+            }
+        }
+        catch(error){
+            console.log("error from server" , server)
+        }
+        })
+    server.listen(port ,callbackFn)
     }
 
 }
+
+
+module.exports = framework
