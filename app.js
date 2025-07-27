@@ -30,11 +30,6 @@ class framework{
         };
     };
 
-
-
-
-
-
     listen(port ,callbackFn){
         const server = http.createServer(async (req ,res) => {
             console.log(req.url)

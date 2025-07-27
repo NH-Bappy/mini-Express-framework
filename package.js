@@ -1,15 +1,24 @@
-const json = (req,res,next) =>{
-    let data = ``
-    req.on("data",(chunk) => {
-        data += chunk.toString();
-    })
-    req.on("end",() => {
-        req.body = JSON.parse(data);
-        res.end();
-        next()
-    })
-    req.on("error",(err) => {
-        console.log("error from json",err);
-    })
-}
-module.exports = {json}
+const json = (req, res, next) => {
+    let body = "";
+
+    req.on("data", chunk => {
+        body += chunk;
+    });
+
+    req.on("end", () => {
+        if (body) {
+            try {
+                req.body = JSON.parse(body);
+            } catch (error) {
+                res.statusCode = 400;
+                return res.end("Invalid JSON input");
+            }
+        } else {
+            req.body = {}; // safely set empty body
+        }
+
+        next();
+    });
+};
+
+module.exports = { json };
