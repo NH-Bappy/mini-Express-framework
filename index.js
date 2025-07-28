@@ -44,17 +44,17 @@ app.post("/data",( req, res) => {
 
     // now hash the password
     const {salt , hash} = hashPassword(password)
-    req.salt = salt
 
     const userInfo = {};
     userInfo.userName = name;
     userInfo.userEmail = email;
     userInfo.hashPassword = hash;
+    userInfo.salt = salt;
     userInfo.createAT = new Date().toDateString();
 // read data
     const tragetPath = path.join(__dirname , "db.json");
     fs.readFile(tragetPath , "utf-8" , (err , data) => {
-        if(err) return res.end("error from read file");
+        if(err) return res.end("error from read file" ,err);
         const previousData = JSON.parse(data);
         previousData.push(userInfo);
         log(previousData)
@@ -62,7 +62,7 @@ app.post("/data",( req, res) => {
 
 // write data
     fs.writeFile(tragetPath , JSON.stringify(previousData) ,(err) => {
-        if(err) return res.end("error from read file");
+        if(err) return res.end("error from read file" ,err);
         log("save data into database")
     })
 
@@ -75,17 +75,30 @@ app.post("/data",( req, res) => {
     res.end("Registration successfully complete")
 })
 
+
+
+
+
+
 app.post("/login" , (req,res) => {
-    log("from login routes" ,req.body)
+    // log("from login routes" ,req.body)
+    const {email , password} = req.body
+    const tragetPath = path.join(__dirname , "db.json");
+    fs.readFile(tragetPath , "utf-8" ,(err , data) => {
+        if(err) return res.end("error from post login read file" ,err);
+        const previousData = JSON.parse(data)
+        const findUser = previousData.find((item) => item.userEmail == email)
+        // log(findUser)
+        const {hashPassword , salt} = findUser;
+        const result = verifyPassword (password , salt , hashPassword)
+        log(result)
+        if(result){
+            res.end("Login successful");
+        }else{
+            res.end("Your password or email Invalid")
+        }
+    })
 })
-
-
-
-
-
-
-
-
 
 
 
